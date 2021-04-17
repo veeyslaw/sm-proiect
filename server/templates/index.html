@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Drawing</title>
+    <link rel="stylesheet" type="text/css" href="../static/css/style.css">
+</head>
+    <body>
+        <script src="../static/js/requests.js" type="text/javascript"></script>
+        <div id="main-container">
+            <div id="controls-container">
+                <p id="status">Camera is OFF</p>
+                <input type="button" value="Start camera" onclick="startCamera()" />
+                <input type="button" value="Stop camera" onclick="stopCamera()" />
+            </div>
+            <div id="drawing-container">
+                <canvas id="drawing-board" width="400" height="400"></canvas>
+            </div>
+            <div id="info-container">
+                <h3>View live drawing here</h3>
+                <form action="/send-email" method="POST">
+                    <input type="email" name="email" placeholder="enter email">
+                    <input type="submit" value="Send drawing" />
+                </form>
+            </div>
+        </div>
+    </body>
+</html>
