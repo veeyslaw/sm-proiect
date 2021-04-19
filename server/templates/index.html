@@ -10,11 +10,11 @@
         <div id="main-container">
             <div id="controls-container">
                 <p id="status">Camera is OFF</p>
-                <input type="button" value="Start camera" onclick="startCamera()" />
-                <input type="button" value="Stop camera" onclick="stopCamera()" />
+                <input type="button" value="Start camera" onclick="startCamera('{{address}}')" />
+                <input type="button" value="Stop camera" onclick="stopCamera('{{address}}')" />
             </div>
             <div id="drawing-container">
-                <canvas id="drawing-board" width="400" height="400"></canvas>
+                <img id="drawing-board" width="1200" height="500" alt="drawing" src="{{ url_for('drawing_stream') }}">
             </div>
             <div id="info-container">
                 <h3>View live drawing here</h3>

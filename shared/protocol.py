@@ -2,8 +2,9 @@ from math import ceil
 
 
 class Field:
-    def __new__(cls, n: int):
-        return type("Field", (object,), {"bitsize": n, "value": None})
+    def __init__(self, size: int):
+        self.bitsize = size
+        self.value = None
 
 
 class Command:
