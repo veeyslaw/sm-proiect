@@ -17,7 +17,7 @@ class ImageHandle:
         self.draw.ellipse([x1, y1, x2, y2], (0, 0, 0))
 
     @property
-    def image_bytes(self) -> io.BytesIO:
+    def image_bytes(self) -> bytes:
         img_byte_arr = io.BytesIO()
         self.image.save(img_byte_arr, format='PNG')
-        return img_byte_arr
+        return img_byte_arr.getvalue()

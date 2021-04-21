@@ -40,4 +40,4 @@ class ImageDrawer:
 
 
 if __name__ == "__main__":
-    pass
+    ImageDrawer(500, 500).run()

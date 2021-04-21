@@ -1,4 +1,4 @@
-function makeRequest(address, resource, callback) {
+function makeRequest(resource, callback) {
     const xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = () => {
         if (xhttp.readyState == 4 && xhttp.status == 200) {
@@ -6,19 +6,18 @@ function makeRequest(address, resource, callback) {
         }
     };
 
-    xhttp.open("POST", `http://${address}/${resource}`, true);
+    xhttp.open("POST", resource, true);
     xhttp.send();
 }
 
-function startCamera(address) {
-    makeRequest(address, "start-camera", (response) => {
+function startCamera() {
+    makeRequest("/start-camera", (response) => {
         document.getElementById("status").innerHTML = response;
     });
 }
 
-
-function stopCamera(address) {
-    makeRequest(address, "stop-camera", (response) => {
+function stopCamera() {
+    makeRequest("/stop-camera", (response) => {
         document.getElementById("status").innerHTML = response;
     });
 }

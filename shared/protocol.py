@@ -8,14 +8,10 @@ class Field:
 
 
 class Command:
+    ENDIANNESS = "big"
     MOVE = 0x0
     RCLICK = 0x1
     LCLICK = 0x2
-    # ...
-
-
-class Message:
-    ENDIANNESS = "big"
 
     def __init__(self, command: int = 0, x: int = 0, y: int = 0):
         self._command = Field(4)
@@ -51,12 +47,12 @@ class Message:
         for value, bitsize in fields:
             mask = (0x1 << bitsize) - 1
             res = (res << bitsize) | (mask & value)
-        return res.to_bytes(len(self), Message.ENDIANNESS)
+        return res.to_bytes(len(self), Command.ENDIANNESS)
 
     @classmethod
-    def from_bytes(cls, msg_bytes: bytes) -> 'Message':
+    def from_bytes(cls, msg_bytes: bytes) -> 'Command':
         res = cls()
-        msg_int = int.from_bytes(msg_bytes, Message.ENDIANNESS)
+        msg_int = int.from_bytes(msg_bytes, Command.ENDIANNESS)
         fields = [(name, v.bitsize) for name, v in vars(res).items()]
         for name, bitsize in fields[::-1]:
             mask = (0x1 << bitsize) - 1
