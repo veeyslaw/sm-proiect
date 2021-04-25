@@ -1,6 +1,5 @@
 import io
 from tkinter import *
-
 from PIL import Image, ImageDraw
 
 

@@ -1,19 +1,50 @@
 import io
 import threading
+import subprocess
 import time
 from flask import Flask, render_template, request, Response
-from tests.test_painting import ImageDrawer
+from image_handle import ImageHandle
+import socket
+from protocol import Command
 
-idrw = ImageDrawer(1200, 500)
+
+ih = ImageHandle(1200, 500)
 app = Flask(__name__)
+camera_on = False
+camera_listener_thread = None
+mutex = threading.Lock()
 
 
 CONFIG = {
     "PORT": 6969,
-    "FPS": 60
+    "FPS": 144
 }
 DELAY_SECONDS = 1.0 / CONFIG["FPS"]
+CAMERA_PORT = 3333
+MESSAGE_LENGTH = 1024
 
+
+def launch_camera_listener():
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.bind(('localhost', CAMERA_PORT))
+        sock.listen(1)
+        (camera_sock, _) = sock.accept()
+    
+    global camera_on
+    global mutex
+    global ih
+    while camera_on:
+        message = camera_sock.recv(MESSAGE_LENGTH)
+        if message == b'':
+            print('Camera stopped')
+            camera_on = False
+            break
+        command = Command.from_bytes(message)
+        print(str(command))
+        with mutex:
+            ih.paint(command.x, command.y)
+    
+    camera_sock.close()
 
 @app.route("/")
 def index():
@@ -33,20 +64,32 @@ def send_email():
 
 @app.route("/start-camera", methods=["POST"])
 def start_camera():
+    global camera_on
+    if not camera_on:
+        camera_on = True
+        global camera_listener_thread
+        camera_listener_thread = threading.Thread(target=launch_camera_listener)
+        camera_listener_thread.start()
+        subprocess.Popen(['python', 'camera.py'])
     return "Camera is ON"
 
 
 @app.route("/stop-camera", methods=["POST"])
 def stop_camera():
+    global camera_on
+    if camera_on:
+        camera_on = False
+        global camera_listener_thread
+        camera_listener_thread.join()
     return "Camera is OFF"
 
 
 def generate_image_data() -> bytes:
-    while idrw.is_running:
-        img_byte_arr = io.BytesIO()
-        idrw.image.save(img_byte_arr, format='PNG')
-        yield b'--frame\r\n'b'Content-Type: image/jpeg\r\n\r\n' + img_byte_arr.getvalue() + b'\r\n'
-        time.sleep(DELAY_SECONDS)
+    global ih
+    with mutex:
+        image = ih.image_bytes
+    yield b'--frame\r\n'b'Content-Type: image/jpeg\r\n\r\n' + image + b'\r\n'
+    time.sleep(DELAY_SECONDS)
 
 
 @app.route('/drawing-stream')
@@ -60,6 +103,6 @@ if __name__ == "__main__":
     app.config['TEMPLATES_AUTO_RELOAD'] = True
     app.config["SEND_FILE_MAX_AGE_DEFAULT "] = 0
     t = threading.Thread(target=lambda: app.run(port=CONFIG["PORT"]))
+
     t.start()
-    idrw.run()
     t.join()
