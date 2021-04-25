@@ -3,6 +3,9 @@ from tkinter import *
 from PIL import Image, ImageDraw
 
 
+IMAGE_FILE_NAME = 'image.jpeg'
+
+
 class ImageHandle:
     # Used to draw on a virtual image which will be displayed in the client
     def __init__(self, w: int, h: int, bgcolor=(255, 255, 255)):
@@ -35,3 +38,6 @@ class ImageHandle:
 
     def dist2(self, x, y) -> float:
         return abs((self.last_x - x) ** 2 + (self.last_y - y) ** 2)
+
+    def save(self):
+        self.image.save(IMAGE_FILE_NAME)
