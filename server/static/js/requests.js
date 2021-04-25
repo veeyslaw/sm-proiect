@@ -22,3 +22,6 @@ function stopCamera() {
     });
 }
 
+function clearDrawing() {
+    makeRequest("/clear-drawing", (response) => {});
+}

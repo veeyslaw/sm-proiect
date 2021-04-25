@@ -1,27 +1,25 @@
 import cv2
 import numpy as np
-import math
 import socket
 import time
-from app import CAMERA_PORT, IMAGE_WIDTH, IMAGE_HEIGHT
+from app import CONFIG
 from protocol import Command
 
-
 # parameters
-cap_region_x_begin=0.5  # start point/total width
-cap_region_y_end=0.8  # start point/total width
-threshold = 7  #  BINARY threshold
+cap_region_x_begin = 0.5  # start point/total width
+cap_region_y_end = 0.8  # start point/total width
+threshold = 7  # BINARY threshold
 blurValue = 41  # GaussianBlur parameter
 bgSubThreshold = 50
 learningRate = 0
 
 
-def removeBG(bgModel, frame):
-    fgmask = bgModel.apply(frame,learningRate=learningRate)
+def remove_bg(bg_model, img_frame):
+    fgmask = bg_model.apply(img_frame, learningRate=learningRate)
     kernel = np.ones((3, 3), np.uint8)
     fgmask = cv2.erode(fgmask, kernel, iterations=1)
-    res = cv2.bitwise_and(frame, frame, mask=fgmask)
-    return res
+    result = cv2.bitwise_and(img_frame, img_frame, mask=fgmask)
+    return result
 
 
 if __name__ == "__main__":
@@ -31,24 +29,25 @@ if __name__ == "__main__":
         exit()
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        sock.connect(('localhost', CAMERA_PORT)) 
+        sock.connect(('localhost', CONFIG.CAMERA_PORT))
 
         try:
             time.sleep(1)
             bgModel = cv2.createBackgroundSubtractorMOG2(0, bgSubThreshold)
-            
+
             while camera.isOpened():
                 ret, frame = camera.read()
                 if not ret:
                     print('Cannot read frame')
                     break
-                
+
                 frame = cv2.bilateralFilter(frame, 5, 50, 100)  # smoothing filter
                 frame = cv2.flip(frame, 1)  # flip the frame horizontally
 
-                img = removeBG(bgModel, frame)
-                img = img[0:int(cap_region_y_end * frame.shape[0]),
-                            int(cap_region_x_begin * frame.shape[1]):frame.shape[1]]  # clip the ROI
+                img = remove_bg(bgModel, frame)
+                stop_x = int(cap_region_y_end * frame.shape[0])
+                start_y = int(cap_region_x_begin * frame.shape[1])
+                img = img[:stop_x, start_y:frame.shape[1]]  # clip the ROI
 
                 # convert the image into binary image
                 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -72,9 +71,9 @@ if __name__ == "__main__":
                     hull = cv2.convexHull(res)
                     pts = [(p[0][0], p[0][1]) for p in hull]
                     pmax = min(pts, key=lambda p: p[1])
-                    
-                    x = int(pmax[0] / img.shape[1] * IMAGE_WIDTH)
-                    y = int(pmax[1] / img.shape[0] * IMAGE_HEIGHT)
+
+                    x = int(pmax[0] / img.shape[1] * CONFIG.IMAGE_WIDTH)
+                    y = int(pmax[1] / img.shape[0] * CONFIG.IMAGE_HEIGHT)
                     command = Command(Command.MOVE, x, y)
                     try:
                         sent = sock.send(command.to_bytes())
@@ -82,6 +81,6 @@ if __name__ == "__main__":
                             break
                     except BrokenPipeError:
                         break
-                
+
         finally:
             camera.release()

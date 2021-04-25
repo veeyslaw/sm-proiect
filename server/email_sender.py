@@ -1,7 +1,6 @@
 
 import os
 import smtplib
-import imghdr
 from email.message import EmailMessage
 
 EMAIL_ADDRESS = os.environ.get('EMAIL_USER')
