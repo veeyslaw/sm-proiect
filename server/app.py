@@ -8,13 +8,6 @@ import socket
 from protocol import Command
 
 
-ih = ImageHandle(1200, 500)
-app = Flask(__name__)
-camera_on = False
-camera_listener_thread = None
-mutex = threading.Lock()
-
-
 CONFIG = {
     "PORT": 6969,
     "FPS": 144
@@ -22,6 +15,14 @@ CONFIG = {
 DELAY_SECONDS = 1.0 / CONFIG["FPS"]
 CAMERA_PORT = 3333
 MESSAGE_LENGTH = 1024
+IMAGE_WIDTH = 1200
+IMAGE_HEIGHT = 500
+
+
+ih = ImageHandle(IMAGE_WIDTH, IMAGE_HEIGHT)
+app = Flask(__name__)
+camera_on = False
+camera_listener_thread = None
 
 
 def launch_camera_listener():
@@ -31,7 +32,6 @@ def launch_camera_listener():
         (camera_sock, _) = sock.accept()
     
     global camera_on
-    global mutex
     global ih
     while camera_on:
         message = camera_sock.recv(MESSAGE_LENGTH)
@@ -41,8 +41,7 @@ def launch_camera_listener():
             break
         command = Command.from_bytes(message)
         print(str(command))
-        with mutex:
-            ih.paint(command.x, command.y)
+        ih.paint(command.x, command.y)
     
     camera_sock.close()
 
@@ -85,11 +84,11 @@ def stop_camera():
 
 
 def generate_image_data() -> bytes:
-    global ih
-    with mutex:
+    while True:
+        global ih
         image = ih.image_bytes
-    yield b'--frame\r\n'b'Content-Type: image/jpeg\r\n\r\n' + image + b'\r\n'
-    time.sleep(DELAY_SECONDS)
+        yield b'--frame\r\n'b'Content-Type: image/jpeg\r\n\r\n' + image + b'\r\n'
+        time.sleep(DELAY_SECONDS)
 
 
 @app.route('/drawing-stream')
