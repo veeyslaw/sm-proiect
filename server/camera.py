@@ -4,14 +4,34 @@ import socket
 import time
 from app import CONFIG
 from protocol import Command
+import threading
+import subprocess
+import time
 
+
+LED_PORT = 9999
 # parameters
 cap_region_x_begin = 0.5  # start point/total width
 cap_region_y_end = 0.8  # start point/total width
-threshold = 10  # BINARY threshold
+threshold = 30  # BINARY threshold
 blurValue = 41  # GaussianBlur parameter
 bgSubThreshold = 50
 learningRate = 0
+camera_on = False
+
+
+def launch_led_listener():
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.bind(('localhost', LED_PORT))
+        sock.listen(1)
+        (led_sock, _) = sock.accept()
+    
+        global camera_on
+        while camera_on:
+            time.sleep(1)
+            led_sock.recv(8)
+
+        led_sock.close()
 
 
 def remove_bg(bg_model, img_frame):
@@ -23,7 +43,7 @@ def remove_bg(bg_model, img_frame):
 
 
 if __name__ == "__main__":
-    camera = cv2.VideoCapture('/dev/video2')
+    camera = cv2.VideoCapture(0)
     if not camera.isOpened():
         print('Cannot open camera')
         exit()
@@ -36,12 +56,17 @@ if __name__ == "__main__":
             bgModel = cv2.createBackgroundSubtractorMOG2(0, bgSubThreshold)
             wtf_frames = 0
             
-            while camera.isOpened() and wtf_frames < 30:
+            while camera.isOpened() and wtf_frames < 100:
                 wtf_frames += 1
                 ret, frame = camera.read()
                 if not ret:
                     print('Cannot read frame')
                     break
+                
+            camera_on = True
+            led_listener_thread = threading.Thread(target=launch_led_listener)
+            led_listener_thread.start()
+            subprocess.Popen(['python3', 'led.py'])
 
             while camera.isOpened():
                 ret, frame = camera.read()
@@ -92,4 +117,5 @@ if __name__ == "__main__":
                         break
 
         finally:
+            led_listener_thread.join()
             camera.release()
