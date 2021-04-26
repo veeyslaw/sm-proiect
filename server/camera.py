@@ -8,7 +8,7 @@ from protocol import Command
 # parameters
 cap_region_x_begin = 0.5  # start point/total width
 cap_region_y_end = 0.8  # start point/total width
-threshold = 7  # BINARY threshold
+threshold = 10  # BINARY threshold
 blurValue = 41  # GaussianBlur parameter
 bgSubThreshold = 50
 learningRate = 0
@@ -23,7 +23,7 @@ def remove_bg(bg_model, img_frame):
 
 
 if __name__ == "__main__":
-    camera = cv2.VideoCapture(0)
+    camera = cv2.VideoCapture('/dev/video2')
     if not camera.isOpened():
         print('Cannot open camera')
         exit()
@@ -34,13 +34,20 @@ if __name__ == "__main__":
         try:
             time.sleep(1)
             bgModel = cv2.createBackgroundSubtractorMOG2(0, bgSubThreshold)
+            wtf_frames = 0
+            
+            while camera.isOpened() and wtf_frames < 30:
+                wtf_frames += 1
+                ret, frame = camera.read()
+                if not ret:
+                    print('Cannot read frame')
+                    break
 
             while camera.isOpened():
                 ret, frame = camera.read()
                 if not ret:
                     print('Cannot read frame')
                     break
-
                 frame = cv2.bilateralFilter(frame, 5, 50, 100)  # smoothing filter
                 frame = cv2.flip(frame, 1)  # flip the frame horizontally
 
@@ -80,6 +87,8 @@ if __name__ == "__main__":
                         if sent == 0:
                             break
                     except BrokenPipeError:
+                        break
+                    except ConnectionResetError:
                         break
 
         finally:

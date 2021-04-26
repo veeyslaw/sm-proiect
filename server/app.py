@@ -8,7 +8,7 @@ from protocol import Command
 
 
 class CONFIG:
-    PORT = 6969
+    PORT = 6060
     FPS = 60
     DELAY_SECONDS = 1.0 / FPS
     CAMERA_PORT = 3333
@@ -31,20 +31,20 @@ def launch_camera_listener():
         sock.listen(1)
         (camera_sock, _) = sock.accept()
 
-    global camera_on
-    global ih
-    while camera_on:
-        message = camera_sock.recv(CONFIG.MESSAGE_LENGTH)
-        if message == b'':
-            print('Camera stopped')
-            camera_on = False
-            break
-        command = Command.from_bytes(message)
-        # if you want some spam
-        # print(command)
-        ih.paint(command.x, command.y)
-
-    camera_sock.close()
+        global camera_on
+        global ih
+        while camera_on:
+            message = camera_sock.recv(CONFIG.MESSAGE_LENGTH)
+            if message == b'':
+                print('Camera stopped')
+                camera_on = False
+                break
+            command = Command.from_bytes(message)
+            # if you want some spam
+            # print(command)
+            ih.paint(command.x, command.y)
+        
+        camera_sock.close()
 
 
 def launch_led_listener():
@@ -52,12 +52,13 @@ def launch_led_listener():
         sock.bind(('localhost', CONFIG.LED_PORT))
         sock.listen(1)
         (led_sock, _) = sock.accept()
+    
+        global camera_on
+        while camera_on:
+            time.sleep(1)
+            led_sock.recv(8)
 
-    global camera_on
-    while camera_on:
-        time.sleep(1)
-
-    led_sock.close()
+        led_sock.close()
 
 
 @app.route("/")
@@ -130,4 +131,4 @@ if __name__ == "__main__":
     app.jinja_env.auto_reload = True
     app.config['TEMPLATES_AUTO_RELOAD'] = True
     app.config["SEND_FILE_MAX_AGE_DEFAULT "] = 0
-    app.run(port=CONFIG.PORT)
+    app.run(host='0.0.0.0', port=CONFIG.PORT)
