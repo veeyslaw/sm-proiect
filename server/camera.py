@@ -2,8 +2,8 @@ import cv2
 import numpy as np
 import socket
 import time
-from app import CONFIG
 from protocol import Command
+from app import CONFIG
 import threading
 import subprocess
 import time
@@ -47,12 +47,9 @@ if __name__ == "__main__":
     if not camera.isOpened():
         print('Cannot open camera')
         exit()
-
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.connect(('localhost', CONFIG.CAMERA_PORT))
-
         try:
-            time.sleep(1)
             bgModel = cv2.createBackgroundSubtractorMOG2(0, bgSubThreshold)
             wtf_frames = 0
             
@@ -62,12 +59,13 @@ if __name__ == "__main__":
                 if not ret:
                     print('Cannot read frame')
                     break
-                
             camera_on = True
+            print('cel')
             led_listener_thread = threading.Thread(target=launch_led_listener)
             led_listener_thread.start()
+            print('wa')
             subprocess.Popen(['python3', 'led.py'])
-
+            print('nig')
             while camera.isOpened():
                 ret, frame = camera.read()
                 if not ret:
@@ -115,7 +113,9 @@ if __name__ == "__main__":
                         break
                     except ConnectionResetError:
                         break
+                time.sleep(0.01)
 
         finally:
+            camera_on = False
             led_listener_thread.join()
             camera.release()

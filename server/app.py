@@ -22,6 +22,7 @@ app = Flask(__name__)
 camera_on = False
 camera_listener_thread = None
 led_listener_thread = None
+mutex = threading.Lock()
 
 
 def launch_camera_listener():
@@ -41,7 +42,9 @@ def launch_camera_listener():
             command = Command.from_bytes(message)
             # if you want some spam
             # print(command)
-            ih.paint(command.x, command.y)
+            global mutex
+            with mutex:
+                ih.paint(command.x, command.y)
         
         camera_sock.close()
 
@@ -57,7 +60,9 @@ def send_email():
     if len(email) < 3:
         msg = f"Bad email"
     else:
-        ih.save()
+        global mutex
+        with mutex:
+            ih.save()
         subprocess.Popen(['python3', 'email_sender.py', email])
         msg = f"Email sent to {email}"
     return render_template("send_email.html", msg=msg)
@@ -89,7 +94,9 @@ def stop_camera():
 def generate_image_data() -> bytes:
     while True:
         global ih
-        image = ih.image_bytes
+        global mutex
+        with mutex:
+            image = ih.image_bytes
         yield b'--frame\r\n'b'Content-Type: image/jpeg\r\n\r\n' + image + b'\r\n'
         time.sleep(CONFIG.DELAY_SECONDS)
 
