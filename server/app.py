@@ -5,6 +5,7 @@ from flask import Flask, render_template, request, Response
 from image_handle import ImageHandle
 import socket
 from protocol import Command
+from PIL import Image
 
 
 class CONFIG:
@@ -12,7 +13,7 @@ class CONFIG:
     FPS = 60
     DELAY_SECONDS = 1.0 / FPS
     CAMERA_PORT = 3333
-    MESSAGE_LENGTH = 1024
+    MESSAGE_LENGTH = 921600
     IMAGE_WIDTH = 1200
     IMAGE_HEIGHT = 500
 
@@ -23,12 +24,14 @@ camera_on = False
 camera_listener_thread = None
 led_listener_thread = None
 mutex = threading.Lock()
+camera_sock = None
 
 
 def launch_camera_listener():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.bind(('localhost', CONFIG.CAMERA_PORT))
         sock.listen(1)
+        global camera_sock
         (camera_sock, _) = sock.accept()
 
         global camera_on
@@ -39,12 +42,13 @@ def launch_camera_listener():
                 print('Camera stopped')
                 camera_on = False
                 break
-            command = Command.from_bytes(message)
+            image = Image.frombytes('RGB', (640, 480), message)
+            #### pur teoretic e un PIL.Image corect transmis
             # if you want some spam
             # print(command)
             global mutex
             with mutex:
-                ih.paint(command.x, command.y)
+                ih.set(image)
         
         camera_sock.close()
 
@@ -66,6 +70,14 @@ def send_email():
         subprocess.Popen(['python3', 'email_sender.py', email])
         msg = f"Email sent to {email}"
     return render_template("send_email.html", msg=msg)
+
+
+### TODO
+#@app.route("/capture-background", methods=["POST"])
+#def capture_background():
+    #global camera_sock
+    #if camera_sock is not None:
+        #camera_sock.send(b'c')
 
 
 @app.route("/start-camera", methods=["POST"])
