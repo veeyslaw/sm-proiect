@@ -60,12 +60,9 @@ if __name__ == "__main__":
                     print('Cannot read frame')
                     break
             camera_on = True
-            print('cel')
             led_listener_thread = threading.Thread(target=launch_led_listener)
             led_listener_thread.start()
-            print('wa')
             subprocess.Popen(['python3', 'led.py'])
-            print('nig')
             while camera.isOpened():
                 ret, frame = camera.read()
                 if not ret:
