@@ -1,11 +1,11 @@
-import RPi.GPIO as GPIO
+#import RPi.GPIO as GPIO
 import socket
 import time
 from camera import LED_PORT
 
-GPIO.setmode(GPIO.BOARD)
-GPIO.setup(37,GPIO.OUT)
-GPIO.output(37,1)
+#GPIO.setmode(GPIO.BOARD)
+#GPIO.setup(37,GPIO.OUT)
+#GPIO.output(37,1)
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
     sock.connect(('localhost', LED_PORT))
@@ -19,5 +19,5 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         except ConnectionResetError:
             break
 
-GPIO.output(37,0)
-GPIO.cleanup()
+#GPIO.output(37,0)
+#GPIO.cleanup()
