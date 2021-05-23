@@ -98,6 +98,13 @@ if __name__ == "__main__":
                     hull = cv2.convexHull(res)
                     pts = [(p[0][0], p[0][1]) for p in hull]
                     pmax = min(pts, key=lambda p: p[1])
+                    
+                    drawing = np.zeros(img.shape, np.uint8)
+                    cv2.circle(drawing, pmax, 8, (200, 0, 255), -1)
+                    cv2.drawContours(drawing, [res], 0, (0, 255, 0), 2)
+                    cv2.drawContours(drawing, [hull], 0, (0, 0, 255), 3)
+                    # cv2.imshow('output', drawing)
+                    cv2.waitKey(1)
 
                     x = int(pmax[0] / img.shape[1] * CONFIG.IMAGE_WIDTH)
                     y = int(pmax[1] / img.shape[0] * CONFIG.IMAGE_HEIGHT)

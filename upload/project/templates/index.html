@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Drawing</title>
+    <link rel="stylesheet" type="text/css" href="../static/css/style.css">
+</head>
+    <body>
+        <script src="../static/js/requests.js" type="text/javascript"></script>
+        <div id="main-container">
+            <div id="controls-container">
+                <p id="status">Camera is OFF</p>
+                <input type="button" value="Start camera" onclick="startCamera()" />
+                <input type="button" value="Stop camera" onclick="stopCamera()" />
+                <input type="button" value="Clear drawing" onclick="clearDrawing()" />
+            </div>
+            <div id="drawing-container">
+                <img id="drawing-board" width="1200" height="500" alt="drawing" src="{{ url_for('drawing_stream') }}">
+            </div>
+            <div id="info-container">
+                <h3>View live drawing here</h3>
+                <form action="/send-email" method="POST">
+                    <input type="email" name="email" placeholder="enter email">
+                    <input type="submit" value="Send drawing" />
+                </form>
+            </div>
+        </div>
+    </body>
+</html>
